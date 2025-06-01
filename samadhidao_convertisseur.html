@@ -1,0 +1,107 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Convertisseur SAMADHIDAO</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      background-color: #f5f5f5;
+      color: #333;
+    }
+    .container {
+      max-width: 500px;
+      background-color: white;
+      padding: 20px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      border-radius: 8px;
+    }
+    input, button {
+      font-size: 16px;
+      padding: 10px;
+      margin-top: 10px;
+      width: 100%;
+    }
+    .result {
+      margin-top: 20px;
+      font-size: 17px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Convertisseur SAMADHIDAO</h2>
+    <label for="dateInput">Date Grégorienne (JJ/MM/AAAA)</label>
+    <input type="text" id="dateInput" placeholder="Ex : 29/02/1980" />
+    <button onclick="convertir()">Convertir</button>
+    <div class="result" id="resultat"></div>
+  </div>
+
+  <script>
+    const moisNoms = ["KAVAEN", "MINALI", "ZEKAR", "LUNESI", "SOGETH", "VELUMA", "ZENTHE",
+                      "KIRUVA", "TRAVOK", "NESIAL", "MUZOEN", "ZORATH", "SAEKUN"];
+    const joursSemaine = ["MUK", "MINU", "SENE", "LORA", "ZAK", "TAVE", "ZENGA"];
+    const refDate = new Date(1979, 1, 28); // 28 février 1979
+
+    function estDoramuth(annee) {
+      if (annee < 0) return false;
+      return (
+        annee % 4 === 0 ||
+        annee % 128 === 0 ||
+        annee % 132 === 0 ||
+        annee % 3200 === 0 ||
+        annee % 32000 === 0 ||
+        annee === 0
+      );
+    }
+
+    function convertir() {
+      const input = document.getElementById("dateInput").value;
+      const parts = input.split("/");
+      if (parts.length !== 3) {
+        document.getElementById("resultat").textContent = "⚠️ Format invalide.";
+        return;
+      }
+
+      const [j, m, a] = parts.map(p => parseInt(p));
+      const date = new Date(a, m - 1, j);
+      if (isNaN(date)) {
+        document.getElementById("resultat").textContent = "⚠️ Date invalide.";
+        return;
+      }
+
+      const delta = Math.floor((date - refDate) / (1000 * 60 * 60 * 24));
+      let annee = Math.floor(delta / 365);
+      let correction = 0;
+
+      for (let i = 1; i <= annee; i++) {
+        if (estDoramuth(i)) correction++;
+      }
+
+      let reste = delta - correction;
+      if (reste < 0) {
+        annee--;
+        reste += 365 + (estDoramuth(annee) ? 1 : 0);
+      }
+
+      if (reste === 365) {
+        const doras = 1 + Array.from({length: annee}, (_, i) => i + 1).filter(estDoramuth).length;
+        document.getElementById("resultat").textContent = `An ${annee} – DÖRAMÜTH^${doras}`;
+        return;
+      }
+
+      const mois = Math.floor(reste / 28);
+      const jour = (reste % 28) + 1;
+      const nomMois = moisNoms[mois] || "?";
+      const nomJour = joursSemaine[(delta - 1 + 7000) % 7]; // sécurité modulo positif
+
+      const texte = `An ${annee} – Mois ${nomMois} – Jour ${jour} – ${nomJour}`;
+      document.getElementById("resultat").textContent = texte;
+    }
+  </script>
+</body>
+</html>
